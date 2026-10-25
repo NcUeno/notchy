@@ -3,34 +3,258 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Notchy</title>
-  <meta name="description" content="Windows の画面上部に常駐する、時計・天気・Google カレンダーのノッチ型ウィジェット" />
-  <link rel="stylesheet" href="style.css" />
+  <title>Notchy — Windows のためのノッチ型ウィジェット</title>
+  <meta name="description" content="Windows の画面上部に常駐する、時計・天気・Google カレンダーのノッチ型ウィジェット。カーソルを乗せるだけで、今日のすべてが広がります。" />
+  <meta name="theme-color" content="#000000" />
+  <meta property="og:title" content="Notchy — Windows のためのノッチ型ウィジェット" />
+  <meta property="og:description" content="時計・天気・Google カレンダー。カーソルを乗せるだけで広がる、画面のてっぺんの小さな相棒。" />
+  <meta property="og:image" content="https://ncueno.github.io/notchy/assets/icon.png" />
+  <link rel="icon" href="assets/favicon.png" />
+  <link rel="stylesheet" href="assets/notch.css" />
+  <link rel="stylesheet" href="assets/site.css" />
+  <script type="module" src="assets/app.js"></script>
 </head>
 <body>
-  <main>
-    <div class="notch" aria-hidden="true"></div>
-    <h1>Notchy</h1>
-    <p class="lead">Windows の画面上部に常駐する、小さなノッチ型ウィジェット。カーソルを乗せると、時計・天気・今日の予定が広がります。</p>
+  <!-- A live Notchy that hangs from the top of the browser window. -->
+  <div class="top-notch" id="topNotch" aria-hidden="true"></div>
 
-    <div class="grid">
-      <div class="card"><b>時計</b><span>大きな時計と、今日の経過を表示します。</span></div>
-      <div class="card"><b>天気</b><span>現在の天気、12 時間予報、7 日間予報。</span></div>
-      <div class="card"><b>Google カレンダー</b><span>次の予定と月カレンダー。開始が近い予定はノッチに表示されます。</span></div>
-    </div>
+  <header class="nav" id="nav">
+    <a class="brand" href="#top" aria-label="Notchy">
+      <img src="assets/icon.png" alt="" width="26" height="26" />
+      <span>Notchy</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#demos">Demos</a>
+      <a href="#features">Features</a>
+      <a href="#privacy">Privacy</a>
+    </nav>
+  </header>
 
-    <h2>Google アカウントの利用について</h2>
-    <p>
-      Notchy は、ユーザー本人の Google カレンダーの予定を<strong>読み取って表示するためだけに</strong>
-      Google アカウントへのアクセス（<code>calendar.readonly</code>）を求めます。
-      予定の作成・変更・削除は行いません。取得したデータはユーザーの PC の中でだけ使われ、
-      開発者を含む第三者に送信されることはありません。
-    </p>
-    <p>詳しくは <a href="privacy.html">プライバシーポリシー</a> をご覧ください。</p>
+  <main id="top">
+    <!-- ================= Hero ================= -->
+    <section class="hero">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="hero-grid" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <p class="eyebrow reveal"><span class="dot"></span>Notchy for Windows</p>
+        <h1 class="hero-title">
+          <span class="line"><span>画面のてっぺんに、</span></span>
+          <span class="line"><span>今日のすべてを。</span></span>
+        </h1>
+        <p class="hero-lead reveal" style="--d: .35s">
+          時刻、天気、Google カレンダー。<br class="sp-hide" />
+          カーソルを乗せるだけで広がる、Windows のためのノッチ型ウィジェット。
+        </p>
+        <div class="hero-cta reveal" style="--d: .5s">
+          <a class="btn-primary" href="#demos">
+            デモを試す
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+          </a>
+          <a class="btn-ghost" href="#features">機能を見る</a>
+        </div>
+        <ul class="badges reveal" style="--d: .65s">
+          <li>Windows 10 / 11</li>
+          <li>Tauri 2 + Rust</li>
+          <li>読み取り専用の Google 連携</li>
+          <li>API キー不要の天気</li>
+        </ul>
+      </div>
+      <p class="hover-hint" id="hoverHint" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+        上のノッチにカーソルを乗せてみてください
+      </p>
+    </section>
 
-    <footer>
-      Notchy は個人が開発・利用している Windows アプリです。 · <a href="privacy.html">プライバシーポリシー</a>
-    </footer>
+    <!-- ================= Demos ================= -->
+    <section class="section demos" id="demos">
+      <div class="section-head reveal">
+        <p class="kicker">Demos</p>
+        <h2>ノッチを、ひと巡り。</h2>
+        <p class="sub">機能を選ぶと、その動きを再生します。画面の中のノッチには、直接カーソルを乗せて操作することもできます。</p>
+      </div>
+
+      <div class="demo-layout">
+        <ol class="scene-list" id="sceneList" role="tablist" aria-label="デモ"></ol>
+
+        <div class="demo-main">
+          <div class="stage-wrap" id="stageWrap">
+            <div class="stage" id="stage">
+              <div class="screen" id="screen">
+                <div class="wallpaper" aria-hidden="true">
+                  <div class="bloom b1"></div><div class="bloom b2"></div><div class="bloom b3"></div>
+                </div>
+
+                <div class="win" id="win" aria-hidden="true">
+                  <div class="win-tabs">
+                    <span class="win-tab on" data-wtab="0"><i style="background:#0a84ff"></i>プロジェクト計画</span>
+                    <span class="win-tab" data-wtab="1"><i style="background:#30d158"></i>デザインレビュー資料</span>
+                    <span class="win-tab" data-wtab="2"><i style="background:#ff9f0a"></i>週次レポート</span>
+                    <span class="win-ctrl"><b></b><b></b><b></b></span>
+                  </div>
+                  <div class="win-url"><span></span></div>
+                  <div class="win-body">
+                    <div class="doc">
+                      <div class="sk h1"></div>
+                      <div class="sk w80"></div><div class="sk w90"></div><div class="sk w60"></div>
+                      <div class="doc-cards"><div></div><div></div><div></div></div>
+                      <div class="sk w90"></div><div class="sk w70"></div>
+                    </div>
+                    <aside class="doc-side"><div class="sk w60"></div><div class="sk w80"></div><div class="sk w50"></div><div class="sk w70"></div></aside>
+                  </div>
+                  <div class="ripple" id="ripple"></div>
+                </div>
+
+                <div class="taskbar" aria-hidden="true">
+                  <div class="tb-apps">
+                    <span class="tb-start"><i></i><i></i><i></i><i></i></span>
+                    <span class="tb-ico" style="--c1:#5ac8fa;--c2:#0a84ff"></span>
+                    <span class="tb-ico on" style="--c1:#ffd60a;--c2:#ff9f0a"></span>
+                    <span class="tb-ico" style="--c1:#64d2ff;--c2:#5e5ce6"></span>
+                    <span class="tb-ico" style="--c1:#30d158;--c2:#0b8a3a"></span>
+                    <span class="tb-ico" style="--c1:#ff6482;--c2:#bf5af2"></span>
+                  </div>
+                  <div class="tb-tray num"><span id="tbTime">14:48</span><span id="tbDate">2026/10/26</span></div>
+                </div>
+
+                <div class="notch-host" id="demoNotch"></div>
+
+                <svg class="fake-cursor" id="cursor" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+                  <path d="M4.5 2.5v17.2l4.6-4.4 3 6.8 3-1.3-3-6.7h6.4z" fill="#fff" stroke="#000" stroke-width="1.3" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="demo-caption">
+            <p id="caption" aria-live="polite"></p>
+            <button class="play" id="playBtn" aria-label="一時停止">
+              <svg class="i-pause" viewBox="0 0 24 24" width="14" height="14"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></svg>
+              <svg class="i-play" viewBox="0 0 24 24" width="14" height="14"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Numbers ================= -->
+    <section class="section numbers">
+      <div class="num-grid">
+        <div class="stat reveal"><b><span data-count="80">0</span><small>ms</small></b><span>カーソルを乗せてから開くまで</span></div>
+        <div class="stat reveal" style="--d:.08s"><b><span data-count="30">0</span><small>分前</small></b><span>予定がノッチに現れるタイミング</span></div>
+        <div class="stat reveal" style="--d:.16s"><b><span data-count="5">0</span><small>分ごと</small></b><span>Google カレンダーを再取得</span></div>
+        <div class="stat reveal" style="--d:.24s"><b><span data-count="15">0</span><small>分ごと</small></b><span>天気を更新</span></div>
+      </div>
+    </section>
+
+    <!-- ================= Features ================= -->
+    <section class="section" id="features">
+      <div class="section-head reveal">
+        <p class="kicker">Features</p>
+        <h2>小さく、静かに、<br />ちゃんと役に立つ。</h2>
+        <p class="sub">いつもは時刻と気温だけ。必要なときにだけ、そっと広がります。</p>
+      </div>
+
+      <div class="bento">
+        <article class="f-card span-2 reveal">
+          <div class="f-visual v-live">
+            <div class="pill-demo"><span class="num">14:48</span><span class="pd-mid"><i></i>デザインレビュー<em class="num">あと12分</em></span><span class="num pd-wx">☀ 19°</span></div>
+          </div>
+          <h3>予定を、先回りして。</h3>
+          <p>30 分以内に始まる予定があると、ノッチが横に伸びてタイトルと残り時間を表示。進行中なら「残り◯分」に変わります。</p>
+        </article>
+
+        <article class="f-card reveal" style="--d:.08s">
+          <div class="f-visual v-through">
+            <div class="vt-notch"></div>
+            <div class="vt-zone"></div>
+            <svg class="vt-cursor" viewBox="0 0 24 24" width="20" height="20"><path d="M4.5 2.5v17.2l4.6-4.4 3 6.8 3-1.3-3-6.7h6.4z" fill="#fff" stroke="#000" stroke-width="1.3"/></svg>
+          </div>
+          <h3>邪魔をしない。</h3>
+          <p>ノッチの外側はクリック透過。全画面のウィンドウでも、タブやボタンはいつもどおり押せます。</p>
+        </article>
+
+        <article class="f-card reveal">
+          <div class="f-visual v-icon"><span class="big-ico" data-icon="lock"></span></div>
+          <h3>Google カレンダーと直結。</h3>
+          <p>Calendar API から直接取得し、5 分ごとに更新。権限は読み取りのみ（calendar.readonly）。表示するカレンダーも選べます。</p>
+        </article>
+
+        <article class="f-card reveal" style="--d:.08s">
+          <div class="f-visual v-wx"><span class="wx-row" id="wxRow"></span></div>
+          <h3>天気は、キー不要。</h3>
+          <p>Open-Meteo を使った現在の天気、12 時間予報、7 日間予報。地域は都市名で検索して切り替え。</p>
+        </article>
+
+        <article class="f-card reveal" style="--d:.16s">
+          <div class="f-visual v-mon">
+            <div class="mon on"><i></i></div><div class="mon"><i></i></div>
+          </div>
+          <h3>どのモニターにも。</h3>
+          <p>表示するディスプレイを設定から選択。解像度や拡大率（DPI）の違いにも対応し、選択は記憶されます。</p>
+        </article>
+
+        <article class="f-card span-3 reveal">
+          <div class="f-visual v-stack">
+            <span>Tauri 2</span><span>Rust</span><span>HTML / CSS / JS</span><span>WebView2</span>
+          </div>
+          <h3>ネイティブで、軽やかに。</h3>
+          <p>ウィンドウ制御やカーソル監視、OAuth は Rust で。画面はフレームワークを使わない素の HTML/CSS/JS で描いています。開閉は Apple 風のばねのようなカーブで 0.55 秒。</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= Privacy ================= -->
+    <section class="section privacy" id="privacy">
+      <div class="privacy-card reveal">
+        <div class="privacy-text">
+          <p class="kicker">Privacy</p>
+          <h2>Google アカウントの利用について</h2>
+          <p>
+            Notchy は、ユーザー本人の Google カレンダーの予定を<strong>読み取って表示するためだけに</strong>
+            Google アカウントへのアクセス（<code>calendar.readonly</code>）を求めます。
+            予定の作成・変更・削除は行いません。取得したデータはユーザーの PC の中でだけ使われ、
+            開発者を含む第三者に送信されることはありません。
+          </p>
+          <p>詳しくは <a href="privacy.html">プライバシーポリシー</a> をご覧ください。</p>
+        </div>
+        <ul class="privacy-list">
+          <li><span data-icon="lock"></span><div><b>読み取り専用</b>予定を書き換えることはありません。</div></li>
+          <li><span data-icon="monitor"></span><div><b>データは PC の中だけ</b>外部のサーバーには送りません。</div></li>
+          <li><span data-icon="layers"></span><div><b>資格情報マネージャーに保存</b>ログイン情報は Windows の仕組みで保護。</div></li>
+          <li><span data-icon="power"></span><div><b>ログアウトで取り消し</b>Google 側の許可もまとめて解除します。</div></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ================= Get started ================= -->
+    <section class="section start" id="start">
+      <div class="section-head reveal">
+        <p class="kicker">Get started</p>
+        <h2>3 ステップで、はじまる。</h2>
+      </div>
+      <ol class="steps">
+        <li class="reveal"><span class="step-n num">01</span><h3>起動する</h3><p>画面上部の中央に、小さなノッチが現れます。Windows 10 / 11（64bit）、WebView2 が必要です。</p></li>
+        <li class="reveal" style="--d:.08s"><span class="step-n num">02</span><h3>地域を選ぶ</h3><p>設定タブで都市名を検索。天気の取得に API キーは要りません。</p></li>
+        <li class="reveal" style="--d:.16s"><span class="step-n num">03</span><h3>Google でログイン</h3><p>表示したいカレンダーにチェック。iCal URL を追加することもできます。</p></li>
+      </ol>
+    </section>
+
+    <!-- ================= Final ================= -->
+    <section class="final">
+      <div class="final-glow" aria-hidden="true"></div>
+      <img class="final-icon reveal" src="assets/icon.png" alt="Notchy のアイコン" width="112" height="112" />
+      <h2 class="reveal" style="--d:.08s">ノッチは、余白じゃない。</h2>
+      <p class="reveal" style="--d:.16s">Notchy — Windows のためのノッチ型ウィジェット</p>
+      <div class="hero-cta reveal" style="--d:.24s">
+        <a class="btn-primary" href="#demos">もう一度デモを見る</a>
+        <a class="btn-ghost" href="privacy.html">プライバシーポリシー</a>
+      </div>
+    </section>
   </main>
+
+  <footer class="footer">
+    <span>Notchy は個人が開発・利用している Windows アプリです。</span>
+    <nav><a href="#demos">Demos</a><a href="#features">Features</a><a href="privacy.html">プライバシーポリシー</a></nav>
+  </footer>
 </body>
 </html>
