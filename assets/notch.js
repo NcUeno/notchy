@@ -9,6 +9,8 @@ export const ICON = {
   calendar: (s) => line('<rect x="3.5" y="5" width="17" height="15.5" rx="3.2"/><path d="M3.5 10h17M8.5 3v4M15.5 3v4"/>', s),
   weather: (s) => line('<path d="M9 3.2v1.3M3.7 9H5M4.9 4.9l.9.9M13.1 4.9l-.9.9"/><path d="M6.3 11.3A3.3 3.3 0 0 1 12.4 8"/><path d="M8 20.5h9.5a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.6.8A3.1 3.1 0 0 0 8 20.5z"/>', s),
   settings: (s) => line('<path d="M4 7h9M18 7h2M4 17h3M12 17h8"/><circle cx="15.5" cy="7" r="2.3"/><circle cx="9.5" cy="17" r="2.3"/>', s),
+  speaker: (s) => line('<path d="M4 9.5h3.2L12 5.5v13l-4.8-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18.2 6.5a7.5 7.5 0 0 1 0 11"/>', s),
+  speakerOff: (s) => line('<path d="M4 9.5h3.2L12 5.5v13l-4.8-4H4z"/><path d="m16 9.5 5 5M21 9.5l-5 5"/>', s),
   pin: (s) => line('<path d="M12 21s-6.5-5.7-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 15.3 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.3"/>', s),
   left: (s) => line('<path d="M14.5 18 8.5 12l6-6"/>', s),
   right: (s) => line('<path d="m9.5 18 6-6-6-6"/>', s),
@@ -98,10 +100,25 @@ function sampleWeather(now) {
   return { temp: 19, feels: 18, humidity: 52, wind: 2.8, kind: 'clear', label: '晴れ', isDay, hourly, daily, city: '東京', admin: '東京都' };
 }
 
+function sampleMixer() {
+  return {
+    master: 0.72,
+    masterMuted: false,
+    apps: [
+      { id: 'music', name: 'ミュージック', volume: 0.64, muted: false, active: true, bg: 'linear-gradient(135deg,#ff6482,#ff375f)' },
+      { id: 'browser', name: 'ブラウザ', volume: 0.8, muted: false, active: true, bg: 'linear-gradient(135deg,#64d2ff,#0a84ff)' },
+      { id: 'voice', name: 'ボイスチャット', volume: 0.9, muted: false, active: false, bg: 'linear-gradient(135deg,#a78bfa,#5e5ce6)' },
+      { id: 'game', name: 'ゲーム', volume: 0.46, muted: false, active: false, bg: 'linear-gradient(135deg,#ffd60a,#ff9f0a)' },
+      { id: 'system', name: 'システム音', volume: 0.5, muted: false, active: false },
+    ],
+  };
+}
+
 const TABS = [
   { id: 'home', icon: ICON.home, title: 'ホーム' },
   { id: 'calendar', icon: ICON.calendar, title: 'カレンダー' },
   { id: 'weather', icon: ICON.weather, title: '天気' },
+  { id: 'audio', icon: ICON.speaker, title: '音量' },
   { id: 'settings', icon: ICON.settings, title: '設定' },
 ];
 
@@ -132,6 +149,7 @@ export function createNotch(host, opts = {}) {
     selected: startOfDay(now()),
     monitor: 0,
     gcal: { main: true, work: true, family: false, holiday: true },
+    mixer: sampleMixer(),
   };
   let events = sampleEvents(now());
   const weather = sampleWeather(now());
@@ -191,7 +209,7 @@ export function createNotch(host, opts = {}) {
     // Re-trigger the view-in animation like switching sections in the app.
     v.className = 'view';
     void v.offsetWidth;
-    ({ home: renderHome, calendar: renderCalendar, weather: renderWeather, settings: renderSettings })[state.tab](v);
+    ({ home: renderHome, calendar: renderCalendar, weather: renderWeather, audio: renderAudio, settings: renderSettings })[state.tab](v);
   }
 
   function renderHome(v) {
@@ -297,6 +315,60 @@ export function createNotch(host, opts = {}) {
       </div>`;
   }
 
+  // ---------- Volume mixer ----------
+  const pct = (v) => Math.round(v * 100);
+  function volumeRow(id, name, volume, muted) {
+    return `
+      <input type="range" class="slider" min="0" max="100" value="${pct(volume)}"
+        data-vol="${id}" style="--v:${pct(volume)}%" aria-label="${name}の音量" />
+      <span class="pct num" data-pct="${id}">${pct(volume)}</span>
+      <button class="icon-btn mute${muted ? ' on' : ''}" data-mute="${id}" aria-label="ミュート">
+        ${muted ? ICON.speakerOff(15) : ICON.speaker(15)}
+      </button>`;
+  }
+  function renderAudio(v) {
+    v.className = 'view audio active';
+    const m = state.mixer;
+    const eq = '<span class="eq" aria-label="再生中"><i></i><i></i><i></i></span>';
+    v.innerHTML = `
+      <div class="card master${m.masterMuted ? ' is-muted' : ''}">
+        <span class="master-label">${ICON.speaker(15)} マスター</span>
+        ${volumeRow('master', 'マスター', m.master, m.masterMuted)}
+      </div>
+      <div class="card scroll">
+        <div class="apps">${m.apps.map((a) => `
+          <div class="app-row${a.muted ? ' is-muted' : ''}" data-app="${a.id}">
+            <span class="app-icon" style="${a.bg ? `background:${a.bg};color:#fff` : ''}">${a.id === 'system' ? ICON.speaker(16) : a.name.slice(0, 1)}</span>
+            <div class="app-main">
+              <div class="app-name"><span>${a.name}</span>${a.active ? eq : ''}</div>
+              <div class="app-ctl">${volumeRow(a.id, a.name, a.volume, a.muted)}</div>
+            </div>
+          </div>`).join('')}</div>
+      </div>`;
+  }
+  const findVol = (id) => (id === 'master' ? state.mixer : state.mixer.apps.find((a) => a.id === id));
+  function setVolume(id, value) {
+    const target = findVol(id);
+    if (id === 'master') target.master = value;
+    else target.volume = value;
+    const slider = el.querySelector(`[data-vol="${id}"]`);
+    if (!slider) return;
+    slider.value = pct(value);
+    slider.style.setProperty('--v', `${pct(value)}%`);
+    el.querySelector(`[data-pct="${id}"]`).textContent = pct(value);
+  }
+  function toggleMute(id) {
+    const t = findVol(id);
+    if (id === 'master') t.masterMuted = !t.masterMuted;
+    else t.muted = !t.muted;
+    const muted = id === 'master' ? t.masterMuted : t.muted;
+    const btn = el.querySelector(`[data-mute="${id}"]`);
+    if (!btn) return;
+    btn.classList.toggle('on', muted);
+    btn.innerHTML = muted ? ICON.speakerOff(15) : ICON.speaker(15);
+    btn.closest('.app-row, .master').classList.toggle('is-muted', muted);
+  }
+
   const GCALS = [
     { id: 'main', name: 'メイン', color: C.blue, primary: true },
     { id: 'work', name: '仕事', color: C.orange },
@@ -342,6 +414,7 @@ export function createNotch(host, opts = {}) {
     }
     const ds = t.dataset;
     if (ds.tab) api.setTab(ds.tab);
+    else if (ds.mute) toggleMute(ds.mute);
     else if (ds.day) {
       const d = new Date(Number(ds.day));
       state.selected = d;
@@ -361,6 +434,70 @@ export function createNotch(host, opts = {}) {
       state.gcal[ds.gcal] = !state.gcal[ds.gcal];
       renderPanel();
     }
+  });
+
+  el.addEventListener('input', (e) => {
+    if (e.target.matches('.slider')) setVolume(e.target.dataset.vol, e.target.value / 100);
+  });
+  // Scrolling over a row nudges its volume by 2%, as in the app.
+  el.addEventListener('wheel', (e) => {
+    const slider = e.target.closest('.app-row, .master')?.querySelector('.slider');
+    if (!slider) return;
+    e.preventDefault();
+    setVolume(slider.dataset.vol, Math.max(0, Math.min(100, Number(slider.value) + (e.deltaY < 0 ? 2 : -2))) / 100);
+  }, { passive: false });
+
+  // Drag a row by its icon or name to reorder; the other rows slide aside (FLIP).
+  let reorder = null;
+  function slideRows(list, mutate) {
+    const rows = [...list.children];
+    const before = new Map(rows.map((r) => [r, r.getBoundingClientRect()]));
+    mutate();
+    for (const r of rows) {
+      if (r === reorder?.row) continue;
+      const dy = before.get(r).top - r.getBoundingClientRect().top;
+      if (!dy) continue;
+      r.style.transition = 'none';
+      r.style.transform = `translateY(${dy}px)`;
+      requestAnimationFrame(() => {
+        r.style.transition = 'transform 0.24s var(--ease)';
+        r.style.transform = '';
+      });
+    }
+  }
+  function moveRow(row, over) {
+    const list = over.parentElement;
+    const rows = [...list.children];
+    const from = rows.indexOf(row);
+    const to = rows.indexOf(over);
+    slideRows(list, () => list.insertBefore(row, from < to ? over.nextSibling : over));
+    const order = [...list.children].map((r) => r.dataset.app);
+    state.mixer.apps.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+  }
+  el.addEventListener('pointerdown', (e) => {
+    const row = e.target.closest('.app-row');
+    if (!row || e.button !== 0 || e.target.closest('.slider, .mute')) return;
+    reorder = { row, x: e.clientX, y: e.clientY, active: false, settleUntil: 0 };
+  });
+  addEventListener('pointermove', (e) => {
+    if (!reorder || reorder.scripted) return;
+    if (!reorder.active) {
+      if (Math.hypot(e.clientX - reorder.x, e.clientY - reorder.y) < 5) return;
+      reorder.active = true;
+      reorder.row.classList.add('lifted');
+      el.classList.add('reordering');
+    }
+    if (performance.now() < reorder.settleUntil) return;
+    const over = document.elementFromPoint(e.clientX, e.clientY)?.closest('.app-row');
+    if (!over || over === reorder.row || !el.contains(over)) return;
+    moveRow(reorder.row, over);
+    reorder.settleUntil = performance.now() + 140;
+  });
+  addEventListener('pointerup', () => {
+    if (!reorder || reorder.scripted) return;
+    reorder.row.classList.remove('lifted');
+    el.classList.remove('reordering');
+    reorder = null;
   });
 
   let hoverTimer;
@@ -407,7 +544,22 @@ export function createNotch(host, opts = {}) {
       state.allowLive = on;
       renderCompact();
     },
+    setVolume,
+    toggleMute,
+    // Scripted drag for the tour: lift a mixer row and drop it onto another.
+    lift(id, on) {
+      const row = el.querySelector(`.app-row[data-app="${id}"]`);
+      if (!row) return;
+      row.classList.toggle('lifted', on);
+      reorder = on ? { row, scripted: true } : null;
+    },
+    dropOn(id, overId) {
+      const row = el.querySelector(`.app-row[data-app="${id}"]`);
+      const over = el.querySelector(`.app-row[data-app="${overId}"]`);
+      if (row && over) moveRow(row, over);
+    },
     reset() {
+      state.mixer = sampleMixer();
       state.month = startOfMonth(now());
       state.selected = startOfDay(now());
       state.monitor = 0;

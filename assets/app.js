@@ -125,11 +125,14 @@ function placeCursor(p, ms) {
   cursor.style.setProperty('--cx', `${p.x - 4}px`);
   cursor.style.setProperty('--cy', `${p.y - 2}px`);
 }
-async function press() {
+function setPressed(on) {
   cursor.style.setProperty('--cdur', '120ms');
-  cursor.style.setProperty('--press', 0.82);
+  cursor.style.setProperty('--press', on ? 0.82 : 1);
+}
+async function press() {
+  setPressed(true);
   await sleep(130);
-  cursor.style.setProperty('--press', 1);
+  setPressed(false);
   await sleep(120);
 }
 
@@ -210,6 +213,23 @@ const SCENES = [
     },
   },
   {
+    id: 'audio', icon: 'speaker', title: 'アプリごとの音量',
+    desc: '鳴っているアプリごとに音量とミュートを調整。再生中のアプリには小さなイコライザー。',
+    caption: '行はドラッグで並べ替え、順番は記憶されます。ホイールでも2%ずつ調整できます。',
+    dur: 8400,
+    async run(h) {
+      await h.ensureOpen();
+      await h.click({ sel: '.tab[data-tab="audio"]' });
+      notch.setTab('audio');
+      await h.wait(600);
+      await h.slide('music', 0.32, 1200);
+      await h.wait(300);
+      await h.click({ sel: '[data-mute="voice"]' });
+      await h.wait(500);
+      await h.reorder('browser', 'music');
+    },
+  },
+  {
     id: 'settings', icon: 'settings', title: 'Googleでログイン',
     desc: '表示するカレンダーやモニター、天気の地域を設定。権限は読み取りのみです。',
     caption: 'Googleのカレンダー色をそのまま使用。ログアウトするとGoogle側の許可も取り消します。',
@@ -285,6 +305,54 @@ function helpers(tk) {
         screen.querySelectorAll('.win-tab').forEach((t) => t.classList.toggle('on', t === el));
       } else if (el) el.click();
     },
+    // Drags a mixer slider's thumb to `to` (0–1), moving the cursor with it.
+    slide: async (id, to, ms) => {
+      const sel = `[data-vol="${id}"]`;
+      const slider = screen.querySelector(sel);
+      if (!slider) return;
+      const k = stage.clientWidth / DESIGN_W;
+      const thumbAt = (v) => {
+        const left = pointOf({ sel, fx: 0 });
+        const w = slider.getBoundingClientRect().width / k;
+        return { x: left.x + 7.5 + v * (w - 15), y: left.y };
+      };
+      const from = slider.value / 100;
+      await h.move(thumbAt(from), 800);
+      setPressed(true);
+      slider.classList.add('pressed');
+      const start = performance.now();
+      await new Promise((done) => {
+        const step = (t) => {
+          if (tk.cancelled) return done();
+          const p = Math.min(1, (t - start) / ms);
+          const e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+          const v = from + (to - from) * e;
+          notch.setVolume(id, v);
+          placeCursor(thumbAt(v), 0);
+          if (p < 1) requestAnimationFrame(step);
+          else done();
+        };
+        requestAnimationFrame(step);
+      });
+      slider.classList.remove('pressed');
+      setPressed(false);
+      guard();
+    },
+    // Picks a mixer row up by its icon and drops it where `overId` is.
+    reorder: async (id, overId) => {
+      await h.move({ sel: `.app-row[data-app="${id}"] .app-icon` }, 800);
+      setPressed(true);
+      notch.lift(id, true);
+      await h.wait(200);
+      const over = pointOf({ sel: `.app-row[data-app="${overId}"] .app-icon` });
+      cursor.classList.remove('hide');
+      placeCursor(over, 700);
+      await h.wait(350);
+      notch.dropOn(id, overId);
+      await h.wait(500);
+      notch.lift(id, false);
+      setPressed(false);
+    },
     ensureOpen: async () => {
       notch.setLive(true);
       if (notch.state.expanded) return;
@@ -354,6 +422,7 @@ function release() {
 list.addEventListener('click', (e) => {
   const b = e.target.closest('.scene');
   if (!b) return;
+  started = true;
   play(Number(b.dataset.i));
   b.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
 });

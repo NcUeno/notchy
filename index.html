@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Notchy — Windows のためのノッチ型ウィジェット</title>
-  <meta name="description" content="Windows の画面上部に常駐する、時計・天気・Google カレンダーのノッチ型ウィジェット。カーソルを乗せるだけで、今日のすべてが広がります。" />
+  <meta name="description" content="Windows の画面上部に常駐する、時計・天気・Google カレンダー・音量ミキサーのノッチ型ウィジェット。カーソルを乗せるだけで、今日のすべてが広がります。" />
   <meta name="theme-color" content="#000000" />
   <meta property="og:title" content="Notchy — Windows のためのノッチ型ウィジェット" />
   <meta property="og:description" content="時計・天気・Google カレンダー。カーソルを乗せるだけで広がる、画面のてっぺんの小さな相棒。" />
@@ -42,7 +42,7 @@
           <span class="line"><span>今日のすべてを。</span></span>
         </h1>
         <p class="hero-lead reveal" style="--d: .35s">
-          時刻、天気、Google カレンダー。<br class="sp-hide" />
+          時刻、天気、Google カレンダー、アプリごとの音量。<br class="sp-hide" />
           カーソルを乗せるだけで広がる、Windows のためのノッチ型ウィジェット。
         </p>
         <div class="hero-cta reveal" style="--d: .5s">
@@ -193,12 +193,22 @@
           <p>表示するディスプレイを設定から選択。解像度や拡大率（DPI）の違いにも対応し、選択は記憶されます。</p>
         </article>
 
-        <article class="f-card span-3 reveal">
+        <article class="f-card span-2 reveal">
+          <div class="f-visual v-mix">
+            <div class="mix-row"><span class="mix-ico" style="background:linear-gradient(135deg,#ff6482,#ff375f)">ミ</span><span class="mix-track"><i style="--a:64%;--b:30%"></i></span><span class="mix-eq"><i></i><i></i><i></i></span></div>
+            <div class="mix-row"><span class="mix-ico" style="background:linear-gradient(135deg,#64d2ff,#0a84ff)">ブ</span><span class="mix-track"><i style="--a:80%;--b:55%"></i></span><span class="mix-eq"><i></i><i></i><i></i></span></div>
+            <div class="mix-row"><span class="mix-ico" style="background:linear-gradient(135deg,#ffd60a,#ff9f0a)">ゲ</span><span class="mix-track"><i style="--a:46%;--b:72%"></i></span></div>
+          </div>
+          <h3>アプリごとの音量。</h3>
+          <p>既定の出力デバイスで鳴っているアプリごとに、音量とミュートをその場で調整。再生中のアプリにはイコライザーが揺れます。行はドラッグで並べ替えられ、順番は記憶されます。</p>
+        </article>
+
+        <article class="f-card reveal" style="--d:.08s">
           <div class="f-visual v-stack">
             <span>Tauri 2</span><span>Rust</span><span>HTML / CSS / JS</span><span>WebView2</span>
           </div>
           <h3>ネイティブで、軽やかに。</h3>
-          <p>ウィンドウ制御やカーソル監視、OAuth は Rust で。画面はフレームワークを使わない素の HTML/CSS/JS で描いています。開閉は Apple 風のばねのようなカーブで 0.55 秒。</p>
+          <p>ウィンドウ制御やカーソル監視、OAuth は Rust で。画面はフレームワークを使わない素の HTML/CSS/JS。開閉は 0.55 秒のばねのようなカーブで。</p>
         </article>
       </div>
     </section>
